@@ -71,11 +71,18 @@ void switch_main(int switch_id) {
             n = packet_recv(node_port[k], in_packet);
             // If there was data on that port
             if (n > 0) {
+
                 new_job = (struct switch_job *)
                         malloc(sizeof(struct switch_job));
                 new_job->src = (int) in_packet->src;
                 new_job->dst = (int) in_packet->dst;
                 new_job->packet = in_packet;
+                //Packet destination is switch, catch here and discard
+                if(new_job->dst == switch_id){
+                    free(in_packet);
+                    free(new_job);
+                    continue;
+                }
 
                 //Check and update routing table
                 for(i = 0; i < node_port_num; i++){
@@ -146,7 +153,7 @@ void switch_main(int switch_id) {
 }
 
 
-struct route::net_port * isRouteable(int dstnode, struct route **table, int tablesize){
+struct net_port * isRouteable(int dstnode, struct route **table, int tablesize){
     for(int temp = 0; temp < tablesize; temp++){
         if(table[temp]->client_id == dstnode)
             return table[temp]->client_port;
