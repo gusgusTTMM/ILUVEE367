@@ -31,6 +31,7 @@
 #define MAX_FILE_NAME 100
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
 #include <stdbool.h>
 #define TRUE 1
 #define FALSE 0
