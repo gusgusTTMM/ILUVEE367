@@ -31,8 +31,10 @@
 #define MAX_FILE_NAME 100
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-
-//enum bool {FALSE, TRUE};
+#include <stdbool.h>
+#define TRUE 1
+#define FALSE 0
+//enum bool {FALSE, TRUE};  bool is defined by include <stdbool.h>
 
 /* 
  * Struct used to store a link. It is used when the 
