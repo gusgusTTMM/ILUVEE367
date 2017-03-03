@@ -18,7 +18,7 @@ struct route {
 
 
 enum switch_job_type {
-    JOB_SEND_PKT_ALL_PORTS,
+    JOB_SEND_PKT_ALL_PORT,
     JOB_SEND_PKT_ROUTED
 
 };
@@ -40,3 +40,6 @@ struct switch_queue {
 
 void switch_main(int switch_id);
 
+struct net_port * isRouteable(int dstnode, struct route **table, int tablesize);
+struct switch_job *job_q_switch_remove(struct switch_queue *j_q);
+void job_q_switch_init(struct switch_queue *j_q);

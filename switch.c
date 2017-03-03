@@ -30,8 +30,8 @@ void switch_main(int switch_id) {
     struct switch_job *new_job;
     struct switch_job *new_job2;
 
-    struct switch_queue *job_q;
-    job_q_init(&job_q);
+    struct switch_queue *job_q_switch;
+    job_q_switch_init(&job_q_switch);
     struct route **forward_table;
 
 
@@ -71,7 +71,7 @@ void switch_main(int switch_id) {
             n = packet_recv(node_port[k], in_packet);
             // If there was data on that port
             if (n > 0) {
-
+                printf("Switch: Got packet");
                 new_job = (struct switch_job *)
                         malloc(sizeof(struct switch_job));
                 new_job->src = (int) in_packet->src;
@@ -105,9 +105,9 @@ void switch_main(int switch_id) {
                     new_job->type = JOB_SEND_PKT_ROUTED;
                 }else{
                     //Not routable, send to all
-                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job->type = JOB_SEND_PKT_ALL_PORT;
                 }
-                job_q_add(&job_q, new_job); // Add job
+                job_q_switch_add(&job_q_switch, new_job); // Add job
 
             }
             else {
@@ -117,10 +117,10 @@ void switch_main(int switch_id) {
 
 // Packets recieved, process queue
 
-        if (job_q_num(&job_q) > 0) {
+        if (job_q_switch_num(&job_q_switch) > 0) {
 
             /* Get a new job from the job queue */
-            new_job = job_q_remove(&job_q);
+            new_job = job_q_switch_remove(&job_q_switch);
 
 
             /* Send packet on all ports */
@@ -167,7 +167,7 @@ struct net_port * isRouteable(int dstnode, struct route **table, int tablesize){
 /* Job queue operations */
 
 /* Add a job to the job queue */
-void job_q_add(struct switch_queue *j_q, struct switch_job *j)
+void job_q_switch_add(struct switch_queue *j_q, struct switch_job *j)
 {
     if (j_q->head == NULL ) {
         j_q->head = j;
@@ -183,7 +183,7 @@ void job_q_add(struct switch_queue *j_q, struct switch_job *j)
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct switch_job *job_q_remove(struct switch_queue *j_q)
+struct switch_job *job_q_switch_remove(struct switch_queue *j_q)
 {
     struct switch_job *j;
 
@@ -195,14 +195,14 @@ struct switch_job *job_q_remove(struct switch_queue *j_q)
 }
 
 /* Initialize job queue */
-void job_q_init(struct switch_queue *j_q)
+void job_q_switch_init(struct switch_queue *j_q)
 {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int job_q_num(struct switch_queue *j_q)
+int job_q_switch_num(struct switch_queue *j_q)
 {
     return j_q->occ;
 }

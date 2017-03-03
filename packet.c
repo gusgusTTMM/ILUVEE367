@@ -63,4 +63,20 @@ if (port->type == PIPE) {
 return(n);
 }
 
+void switch_send(struct packet *netdata) {
 
+packet_send(getSwitch(),netdata);
+
+}
+
+struct net_node * getSwitch(){
+    struct net_port *node_list;
+    struct net_port *p_node;
+    node_list = net_get_port_list(0);
+
+    for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
+        if(p_node->type == SWITCH)
+            return (struct net_node *) p_node;
+    }
+    return NULL;
+}
