@@ -22,6 +22,7 @@ int k=0;
 int status;
 struct net_node *node_list;
 struct net_node *p_node;
+struct net_port *switchpipe;
 
 /*
  * Read network configuration file, which specifies
@@ -49,10 +50,12 @@ for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
 		else if (p_node->type = SWITCH) {
 			/* Execute switch routine, which you have to write */
             switch_main(p_node->id);
+
 		}
 		return;
 	}  
 }
+
 
 /* 
  * Parent process: Execute manager routine. 

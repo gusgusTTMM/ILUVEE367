@@ -3,13 +3,9 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include "switch.h"
 #include "net.h"
-#include "host.h"
 #include "packet.h"
 #include "main.h"
 
