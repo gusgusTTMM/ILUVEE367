@@ -18,7 +18,7 @@ struct route {
 
 
 enum switch_job_type {
-    JOB_SEND_PKT_ALL_PORTS,
+    JOB_SEND_PKT_ALL_PORT,
     JOB_SEND_PKT_ROUTED
 
 };

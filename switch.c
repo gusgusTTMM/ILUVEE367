@@ -101,7 +101,7 @@ void switch_main(int switch_id) {
                     new_job->type = JOB_SEND_PKT_ROUTED;
                 }else{
                     //Not routable, send to all
-                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    new_job->type = JOB_SEND_PKT_ALL_PORT;
                 }
                 job_q_add(&job_q, new_job); // Add job
 
@@ -123,7 +123,7 @@ void switch_main(int switch_id) {
             switch(new_job->type) {
 
                 /* Send packets on all ports */
-                case JOB_SEND_PKT_ALL_PORTS:
+                case JOB_SEND_PKT_ALL_PORT:
                     for (k=0; k<node_port_num; k++) {
                         packet_send(node_port[k], new_job->packet);
                     }
