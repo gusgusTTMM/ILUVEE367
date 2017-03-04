@@ -11,17 +11,17 @@
  */
 
 struct man_port_at_host {  /* Port located at the man */
-	int host_id;
-	int send_fd;
-	int recv_fd;
-	struct man_port_at_host *next;
+    int host_id;
+    int send_fd;
+    int recv_fd;
+    struct man_port_at_host *next;
 };
 
 struct man_port_at_man {  /* Port located at the host */
-	int host_id;
-	int send_fd;
-	int recv_fd;
-	struct man_port_at_man *next;
+    int host_id;
+    int send_fd;
+    int recv_fd;
+    struct man_port_at_man *next;
 };
 
 /* 
