@@ -1,13 +1,7 @@
 //
 // Created by Ross on 3/2/2017.
 //
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include "switch.h"
-#include "net.h"
-#include "packet.h"
-#include "main.h"
 
 
 void switch_main(int switch_id) {
