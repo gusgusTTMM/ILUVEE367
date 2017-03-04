@@ -59,12 +59,11 @@ void switch_main(int switch_id) {
           */
 
         for (k = 0; k < node_port_num; k++) { /* Scan all ports */
-
             in_packet = (struct packet *) malloc(sizeof(struct packet));
             n = packet_recv(node_port[k], in_packet);
             // If there was data on that port
             if (n > 0) {
-                printf("Switch: Got packet");
+
                 new_job = (struct switch_job *)
                         malloc(sizeof(struct switch_job));
                 new_job->src = (int) in_packet->src;
@@ -154,8 +153,6 @@ struct net_port * isRouteable(int dstnode, struct route *table, int tablesize){
 
     return NULL;
 }
-
-
 
 /* Job queue operations */
 
