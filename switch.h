@@ -3,11 +3,13 @@
 //
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "net.h"
+#include "packet.h"
+#include "main.h"
 
-#ifndef ILUVEE367_SWITCH_H
-#define ILUVEE367_SWITCH_H
-
-#endif //ILUVEE367_SWITCH_H
 
 struct route {
     bool valid;
