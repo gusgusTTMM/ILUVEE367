@@ -9,4 +9,4 @@ int packet_recv(struct net_port *port, struct packet *p);
 void packet_send(struct net_port *port, struct packet *p);
 
 void switch_send(struct packet *netdata);
-struct net_node * getSwitch();
+struct net_port * getSwitch();

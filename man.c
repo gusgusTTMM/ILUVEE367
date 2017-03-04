@@ -3,9 +3,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -13,7 +10,7 @@
 #include "main.h"
 #include "man.h"
 #include "net.h"
-#include "host.h"
+
 
 #define MAXBUFFER 1000
 #define PIPE_WRITE 1 
@@ -36,6 +33,7 @@ char man_get_user_cmd(int curr_host);
 char man_get_user_cmd(int curr_host)
 {
 char cmd;
+
 
 while(1) {
 	/* Display command options */
@@ -230,6 +228,7 @@ host_list = net_get_man_ports_at_man_list();
 curr_host = host_list;
 
 char cmd;          /* Command entered by user */
+
 
 while(1) {
    /* Get a command from the user */

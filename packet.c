@@ -1,14 +1,11 @@
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h>
 
 #include "main.h"
 #include "packet.h"
 #include "net.h"
-#include "host.h"
 
 
 void packet_send(struct net_port *port, struct packet *p)
@@ -42,7 +39,7 @@ int n;
 int i;
 	
 if (port->type == PIPE) {
-	n = read(port->pipe_recv_fd, msg, PAYLOAD_MAX+4);
+	n = (int) read(port->pipe_recv_fd, msg, PAYLOAD_MAX + 4);
 	if (n>0) {
 		p->src = (char) msg[0];
 		p->dst = (char) msg[1];
@@ -69,14 +66,14 @@ packet_send(getSwitch(),netdata);
 
 }
 
-struct net_node * getSwitch(){
+struct net_port * getSwitch(){
     struct net_port *node_list;
     struct net_port *p_node;
-    node_list = net_get_port_list(0);
+    node_list = net_get_port_list(-1);
 
     for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
         if(p_node->type == SWITCH)
-            return (struct net_node *) p_node;
+            return p_node;
     }
     return NULL;
 }

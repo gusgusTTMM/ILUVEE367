@@ -4,11 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 
 #include <unistd.h>
-#include <fcntl.h>
 
 #include "main.h"
 #include "net.h"
@@ -432,8 +429,7 @@ while(1) {
 		/* Send packets on all ports */	
 		case JOB_SEND_PKT_ALL_PORTS:
 			for (k=0; k<node_port_num; k++) {
-				//packet_send(node_port[k], new_job->packet);
-                switch_send(new_job->packet);
+				packet_send(node_port[k], new_job->packet);
             }
 			free(new_job->packet);
 			free(new_job);
