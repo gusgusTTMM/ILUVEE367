@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include "switch.h"
 #include "net.h"
-#include "host.h"
 #include "packet.h"
 #include "main.h"
 

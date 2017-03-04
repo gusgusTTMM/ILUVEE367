@@ -18,6 +18,7 @@ int k=0;
 
 struct net_node *node_list;
 struct net_node *p_node;
+struct net_port *switchpipe;
 
 /*
  * Read network configuration file, which specifies
@@ -47,10 +48,12 @@ for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
 			/* Execute switch routine, which you have to write */
 			printf("Switch: %d\n", p_node->id);
             switch_main(p_node->id);
+
 		}
 		return;
 	}  
 }
+
 
 /* 
  * Parent process: Execute manager routine. 
