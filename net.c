@@ -14,8 +14,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 
 #define _GNU_SOURCE
 #include <fcntl.h>
@@ -23,7 +21,6 @@
 
 #include "main.h"
 #include "man.h"
-#include "host.h"
 #include "net.h"
 #include "packet.h"
 
@@ -303,7 +300,7 @@ int fd0[2];
 int fd1[2];
 struct man_port_at_man *p_m;
 struct man_port_at_host *p_h;
-int host;
+
 
 
 for (p=g_node_list; p!=NULL; p=p->next) {
@@ -461,11 +458,16 @@ else {
 	for (i=0; i<node_num; i++) { 
 		fscanf(fp, " %c ", &node_type);
 
-		if (node_type = 'H') {
+		if (node_type == 'H') {
 			fscanf(fp, " %d ", &node_id);
 			g_net_node[i].type = HOST;
 			g_net_node[i].id = node_id;
 		}
+		else if(node_type == 'S'){
+            fscanf(fp, " %d ", &node_id);
+            g_net_node[i].type = SWITCH;
+            g_net_node[i].id = node_id;
+        }
 		else {
 			printf(" net.c: Unidentified Node Type\n");
 		}
@@ -544,6 +546,10 @@ for (i=0; i<g_net_link_num; i++) {
 fclose(fp);
 return(1);
 }
+
+
+
+
 
 
 

@@ -1,11 +1,7 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
 #include <unistd.h>
-#include <fcntl.h>
 
 #include "main.h"
 #include "net.h"
@@ -19,7 +15,7 @@ void main()
 
 pid_t pid;  /* Process id */
 int k=0;
-int status;
+
 struct net_node *node_list;
 struct net_node *p_node;
 struct net_port *switchpipe;
@@ -46,9 +42,11 @@ for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
 	else if (pid == 0) { /* The child process, which is a node  */
 		if (p_node->type == HOST) {  /* Execute host routine */
 			host_main(p_node->id);
+			printf("Host: %d\n", p_node->id);
 		}
-		else if (p_node->type = SWITCH) {
+		else{
 			/* Execute switch routine, which you have to write */
+			printf("Switch: %d\n", p_node->id);
             switch_main(p_node->id);
 
 		}

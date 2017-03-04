@@ -20,15 +20,13 @@ void switch_main(int switch_id) {
 
 
     struct packet *in_packet; /* Incoming packet */
-    struct packet *new_packet;
 
     struct net_port *p;
     struct switch_job *new_job;
-    struct switch_job *new_job2;
 
-    struct switch_queue *job_q_switch_switch;
-    job_q_switch_switch_init(&job_q_switch_switch);
-    struct route **forward_table;
+    struct switch_queue *job_q_switch;
+    job_q_switch_init(job_q_switch);
+
 
 
     // Generate linked list with clients
@@ -44,8 +42,7 @@ void switch_main(int switch_id) {
             malloc(node_port_num*sizeof(struct net_port *));
 
     // Allocate routing table
-    forward_table = (struct route **)
-            calloc(node_port_num,sizeof(struct route *));
+    struct route forward_table[node_port_num];
 
 
     /* Load ports into the array */
@@ -66,14 +63,14 @@ void switch_main(int switch_id) {
             n = packet_recv(node_port[k], in_packet);
             // If there was data on that port
             if (n > 0) {
-printf("Switch got packet");
+
                 new_job = (struct switch_job *)
                         malloc(sizeof(struct switch_job));
                 new_job->src = (int) in_packet->src;
                 new_job->dst = (int) in_packet->dst;
                 new_job->packet = in_packet;
-                //Packet destination is switch, catch here and discard
-                if(new_job->dst == switch_id){
+                //Packet destination is switch or loop, catch here and discard
+                if(new_job->dst == switch_id || new_job->dst == new_job->src){
                     free(in_packet);
                     free(new_job);
                     continue;
@@ -82,14 +79,14 @@ printf("Switch got packet");
                 //Check and update routing table
                 for(i = 0; i < node_port_num; i++){
                     //Table already has entry for client, refresh routes
-                    if((int) forward_table[k]->client_id == new_job->src){
-                        forward_table[k]->client_port = node_port[k]; // Save ports
-                        forward_table[k]->valid = 1; // Mark valid
+                    if(forward_table[i].client_id == new_job->src && forward_table[i].valid == 0){
+                        forward_table[i].client_port = node_port[k]; // Save ports
+                        forward_table[i].valid = 1; // Mark valid
                         break;
                     } else{ // Table doesn't have entry, find first invalid and replace
-                        if((int) forward_table[k]->valid == 0){
-                            forward_table[k]->client_port = node_port[k]; // Save ports
-                            forward_table[k]->valid = 1; // Mark valid
+                        if((int) forward_table[i].valid == 0){
+                            forward_table[i].client_port = node_port[k]; // Save ports
+                            forward_table[i].valid = 1; // Mark valid
                         }
                     }
                 }
@@ -102,7 +99,7 @@ printf("Switch got packet");
                     //Not routable, send to all
                     new_job->type = JOB_SEND_PKT_ALL_PORT;
                 }
-                job_q_switch_switch_add(&job_q_switch_switch, new_job); // Add job
+                job_q_switch_add(job_q_switch, new_job); // Add job
 
             }
             else {
@@ -112,10 +109,10 @@ printf("Switch got packet");
 
 // Packets recieved, process queue
 
-        if (job_q_switch_switch_num(&job_q_switch_switch) > 0) {
+        if (job_q_switch_num(job_q_switch) > 0) {
 
             /* Get a new job from the job queue */
-            new_job = job_q_switch_switch_remove(&job_q_switch_switch);
+            new_job = job_q_switch_remove(job_q_switch);
 
 
             /* Send packet on all ports */
@@ -148,12 +145,10 @@ printf("Switch got packet");
 }
 
 
-
-
-struct net_port * isRouteable(int dstnode, struct route **table, int tablesize){
+struct net_port * isRouteable(int dstnode, struct route *table, int tablesize){
     for(int temp = 0; temp < tablesize; temp++){
-        if(table[temp]->client_id == dstnode)
-            return table[temp]->client_port;
+        if(table[temp].client_id == dstnode)
+            return table[temp].client_port;
     }
 
     return NULL;
@@ -162,7 +157,7 @@ struct net_port * isRouteable(int dstnode, struct route **table, int tablesize){
 /* Job queue operations */
 
 /* Add a job to the job queue */
-void job_q_switch_switch_add(struct switch_queue *j_q, struct switch_job *j)
+void job_q_switch_add(struct switch_queue *j_q, struct switch_job *j)
 {
     if (j_q->head == NULL ) {
         j_q->head = j;
@@ -178,7 +173,7 @@ void job_q_switch_switch_add(struct switch_queue *j_q, struct switch_job *j)
 }
 
 /* Remove job from the job queue, and return pointer to the job*/
-struct switch_job *job_q_switch_switch_remove(struct switch_queue *j_q)
+struct switch_job *job_q_switch_remove(struct switch_queue *j_q)
 {
     struct switch_job *j;
 
@@ -190,14 +185,14 @@ struct switch_job *job_q_switch_switch_remove(struct switch_queue *j_q)
 }
 
 /* Initialize job queue */
-void job_q_switch_switch_init(struct switch_queue *j_q)
+void job_q_switch_init(struct switch_queue *j_q)
 {
     j_q->occ = 0;
     j_q->head = NULL;
     j_q->tail = NULL;
 }
 
-int job_q_switch_switch_num(struct switch_queue *j_q)
+int job_q_switch_num(struct switch_queue *j_q)
 {
     return j_q->occ;
 }

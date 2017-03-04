@@ -8,4 +8,5 @@ int packet_recv(struct net_port *port, struct packet *p);
 // send packet on port
 void packet_send(struct net_port *port, struct packet *p);
 
-
+void switch_send(struct packet *netdata);
+struct net_port * getSwitch();
