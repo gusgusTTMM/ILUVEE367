@@ -47,7 +47,7 @@ void switch_main(int switch_id) {
     struct route *forward_table = calloc(node_port_num, sizeof(struct route *));
 
     if (node_port == NULL || forward_table == NULL) {
-        printf("malloc:failed");
+        perror("malloc:failed");
         return;
     }
     /* Load ports into the array */
