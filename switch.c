@@ -46,6 +46,10 @@ void switch_main(int switch_id) {
     // Allocate routing table
     struct route *forward_table = calloc(node_port_num, sizeof(struct route *));
 
+    if (node_port == NULL || forward_table == NULL) {
+        printf("malloc:failed");
+        return;
+    }
     /* Load ports into the array */
     p = node_port_list;
     for (k = 0; k < node_port_num; k++) {
@@ -139,7 +143,9 @@ void switch_main(int switch_id) {
 
     } /* End of while loop */
 
-
+// Some how we get out of a loop
+    free(forward_table);
+    free(node_port);
 
 }
 
