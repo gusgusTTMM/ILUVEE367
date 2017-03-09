@@ -44,7 +44,7 @@ void switch_main(int switch_id) {
             malloc(node_port_num * sizeof(struct net_port *));
 
     // Allocate routing table
-    struct route forward_table[node_port_num];
+    struct route *forward_table = calloc(node_port_num, sizeof(struct route *));
 
     /* Load ports into the array */
     p = node_port_list;
