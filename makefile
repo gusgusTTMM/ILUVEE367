@@ -19,7 +19,7 @@ packet.o:  packet.c
 	gcc -c packet.c
 
 switch.o: switch.c
-    gcc -c switch.c
+	gcc -c switch.c
 
 clean:
 	rm *.o
