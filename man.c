@@ -153,10 +153,10 @@ void set_host_dir(struct man_port_at_man *curr_host) {
  * User is queried for the id of the host to ping.
  *
  * A command message is sent to the current host.
- *    The message starrts with 'p' followed by the id 
+ *    The message starts with 'p' followed by the id
  *    of the host to ping.
  * 
- * Wiat for a reply
+ * Wait for a reply
  */
 
 void ping(struct man_port_at_man *curr_host) {
@@ -211,6 +211,36 @@ int file_upload(struct man_port_at_man *curr_host) {
     usleep(TENMILLISEC);
 }
 
+void download(struct man_port_at_man *curr_host)
+{
+
+    char msg[MAN_MSG_LENGTH];
+    char reply[MAN_MSG_LENGTH];
+    int host_to_ping;
+    int n;
+    char name[NAME_LENGTH];
+
+    printf("Enter id of host to download from: ");
+    scanf("%d", &host_to_ping);
+    printf("Enter name of file to download: ");
+    scanf("%s", &name);
+
+    n = sprintf(msg, "d %d %s", host_to_ping, name);
+
+    printf("Virus is being written to\n");
+
+    write(curr_host->send_fd, msg, n);
+    printf("Virus was sent to host\n");
+    n = 0;
+
+    while (n <= 0)
+    {
+        usleep(TENMILLISEC);
+        n = read(curr_host->recv_fd, reply, MAN_MSG_LENGTH);
+    }
+    reply[n] = '\0';
+    printf("virus says:\n%s\n",reply);
+}
 
 /***************************** 
  * Main loop of the manager  *
@@ -253,7 +283,8 @@ void man_main() {
                 file_upload(curr_host);
                 break;
             case 'd': /* Download a file from a host */
-                printf("This command is not implemented\n");
+                download(curr_host);
+                //printf("This command is not implemented\n");
                 break;
             case 'q':  /* Quit */
                 return;

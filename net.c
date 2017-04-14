@@ -26,7 +26,7 @@
 #include "packet.h"
 
 
-#define MAX_FILE_NAME 100
+#define MAX_FILE_NAME 1000
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
@@ -347,7 +347,7 @@ void create_node_list() {
 
 /*
  * Create links, each with either a pipe or socket.
- * It uses private global varaibles g_net_link[] and g_net_link_num
+ * It uses private global variables g_net_link[] and g_net_link_num
  */
 void create_port_list() {
     struct net_port *p0;
@@ -395,6 +395,15 @@ void create_port_list() {
             g_port_list = p0;
 
         }
+            //adding socket option at this point
+            //this will build the socket connection
+        else if(g_net_link[i].type == SOCKET)
+             {
+                 node0 = g_net_link[i].pipe_node0;
+                 p0 = (struct net_port *) malloc(sizeof(struct net_port));
+                 p0->type = g_net_link[i].type;
+                 p0->pipe_host_id = node0;
+             }
     }
 
 }
@@ -522,6 +531,10 @@ int load_net_data_file() {
 
     fclose(fp);
     return (1);
+}
+
+int socket(){
+
 }
 
 

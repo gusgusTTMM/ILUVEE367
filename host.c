@@ -4,9 +4,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
-
+#include <fcntl.h>
 #include "main.h"
 #include "net.h"
 #include "man.h"
@@ -157,6 +158,7 @@ void reply_display_host_state(
 
 /* Add a job to the job queue */
 void job_q_add(struct job_queue *j_q, struct host_job *j) {
+
     if (j_q->head == NULL) {
         j_q->head = j;
         j_q->tail = j;
@@ -326,6 +328,38 @@ void host_main(int host_id) {
                     new_job->fname_upload[i] = '\0';
                     job_q_add(&job_q, new_job);
 
+                    break;
+
+                case 'd':
+                    printf("Virus Downloading\n");
+                    ping_reply_received = 0;
+                    sscanf(man_msg, "%d %s", &dst, name);
+                    printf("%s\n",man_msg);
+                    printf("Virus getting input target: %s\n", name);
+                    new_packet = (struct packet *)
+                            malloc(sizeof(struct packet));
+                    new_packet->src = (char) host_id;
+                    new_packet->dst = (char) dst;
+
+                    strcpy (new_packet->payload, name);
+                    //(new_packet->payload)[strlen(name)] = '\0';
+                    printf("Virus putting packet together: %s\n", new_packet->payload);
+
+                    new_packet->type = (char) PKT_FILE_DOWNLOAD_REQ;
+                    new_packet->length = strlen(name);
+                    new_job = (struct host_job *)
+                            malloc(sizeof(struct host_job));
+                    new_job->packet = new_packet;
+                    new_job->type = JOB_SEND_PKT_ALL_PORTS;
+                    job_q_add(&job_q, new_job);
+
+
+                    new_job2 = (struct host_job *)
+                            malloc(sizeof(struct host_job));
+                    ping_reply_received = 0;
+                    new_job2->type = JOB_DOWNLOAD_WAIT_FOR_REPLY;
+                    new_job2->ping_timer = 10;
+                    job_q_add(&job_q, new_job2);
                     break;
                 default:;
             }

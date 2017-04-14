@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <sys/wait.h>
 
 #include <unistd.h>
@@ -28,7 +31,7 @@ void main() {
     node_list = net_get_node_list(); /* Returns the list of nodes */
 
 
-/* Create nodes, which are child processwa */
+/* Create nodes, which are child process */
 
     for (p_node = node_list; p_node != NULL; p_node = p_node->next) {
 
