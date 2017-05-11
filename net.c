@@ -616,6 +616,13 @@ int load_net_data_file()
                 g_net_node[i].type = SWITCH;
                 g_net_node[i].id = node_id;
             }
+            else if(node_type == 'D') {
+                printf("DNS node\n");
+                fscanf(fp, " %d ", &node_id);
+                printf("node id %d\n",node_id);
+                g_net_node[i].type = DNS;
+                g_net_node[i].id = 100;
+            }
             else {
                 printf(" net.c: Unidentified Node Type\n");
             }
@@ -724,6 +731,10 @@ int load_net_data_file()
         else if (g_net_node[i].type == SWITCH)
         {
             printf(" SWITCH\n");
+        }
+        else if (g_net_node[i].type == DNS)
+        {
+            printf(" DNS SERVER\n");
         }
         else {
             printf(" Unknown Type\n");

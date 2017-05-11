@@ -1,5 +1,6 @@
+
 /*
- * switch.c
+ * dns.c
 */
 
 #include <stdio.h>
@@ -21,9 +22,9 @@
 #include "main.h"
 #include "net.h"
 #include "man.h"
-#include "host.h"
 #include "packet.h"
-#include "switch.h"
+#include "host.h"
+#include "dns.h"
 #define DEBUG
 #define BACKLOG 10
 
@@ -34,20 +35,20 @@
 #define PKT_PAYLOAD_MAX 100
 #define TENMILLISEC 10000   /* 10 millisecond sleep */
 
-struct forwarding
+struct naming
 {
-    int valid;
-    int dest_id;
-    int port_id;
+    int id;
+    int empty; //if 1 then it is empty, if 0 it is filled
+    char name[50];
 };
 
-void sigchld_handler1(int s)
+void sigchld_handler2(int s)
 {
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
 // get sockaddr, IPv4 or IPv6:
-void *get_in_addr1(struct sockaddr *sa)
+void *get_in_addr2(struct sockaddr *sa)
 {
     if (sa->sa_family == AF_INET) {
         return &(((struct sockaddr_in*)sa)->sin_addr);
@@ -56,43 +57,44 @@ void *get_in_addr1(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void init_forwarding_table(struct forwarding table[100])
+void init_naming_table(struct naming table[255])
 {
     int i;
-    for(i = 0; i < 100; i++){
-        table[i].port_id = i;
-        table[i].valid = 0;   // initialize all invalid
-        table[i].dest_id = -1; //set dest_id = -1 for undefined
+    for(i=0;i<255;i++){
+        table[i].empty = 1;
+        table[i].id = -1;
     }
 }
-int get_host_at_port(struct forwarding table[100], int port_id)
+
+int add_naming_table(struct naming table[255], char name[50], int id)
 {
-    if(table[port_id].valid == 1) return table[port_id].dest_id;
-    else return -1;
+    for(int j=0; j<50; j++){
+        table[id].name[j]=name[j];
+    }
+
+    table[id].id=id;
+    table[id].empty=0;
+    return 1;
 }
-int set_src_at_port(struct forwarding table[100], int host_id, int port_id)
-{
-    //when we find a destination and a port, add it to the table
-    table[port_id].dest_id = host_id;
-    table[port_id].valid = 1;
-}
-int find_host_in_table(struct forwarding table[100], int host_id)
+
+int find_name_in_table(struct naming table[255], char name[50])
 {
     //return the port number of a host we are looking for
     //returns -1 if the host is not defined on a port
     int i;
-    for(i = 0; i < 100; i++){
-        if(table[i].dest_id==host_id && table[i].valid==1)
-            return i;
+    for(i = 0; i < 255; i++){
+        if( strcmp(table[i].name,name) == 0 && table[i].empty==0)
+            return table[i].id;
     }
     return -1;
 }
-void print_ftable(struct forwarding table[100])
+
+void print_ntable(struct naming table[255])
 {
     int i;
-    for(i = 0; i < 100; i++){
-        if(table[i].valid ==1)
-            printf("port: %d, hostid: %d\n", i, table[i].dest_id);
+    for(i = 0; i < 255; i++){
+        if(table[i].empty==0)
+            printf("name: %s, hostid: %d\n", table[i].name, table[i].id);
     }
 }
 
@@ -100,7 +102,7 @@ void print_ftable(struct forwarding table[100])
  *  Main
  */
 
-void switch_main(int host_id)
+void dns_main(int host_id)
 {
 
 /* State */
@@ -120,6 +122,7 @@ void switch_main(int host_id)
 
     int i, k, n;
     int dst;
+    char dns[50];
     char name[MAX_FILE_NAME];
     char string[PKT_PAYLOAD_MAX+1];
 
@@ -134,17 +137,16 @@ void switch_main(int host_id)
 
     struct job_queue job_q;
 
-/* forwarding table  */
-    struct forwarding f_table[100];
-    init_forwarding_table(f_table);
-    int f_table_length = 0;
+/* naming table  */
+    struct naming n_table[255];
+    init_naming_table(n_table);
+    int n_table_length = 0;
 
 /*
  * Initialize pipes
  * Get link port to the manager
  */
 
-    man_port = net_get_host_port(host_id);
 
 
 /* Create an array node_port[ ] to store the network link ports
@@ -259,7 +261,7 @@ void switch_main(int host_id)
                 exit(1);
             }
 
-            sa.sa_handler = sigchld_handler1; // reap all dead processes
+            sa.sa_handler = sigchld_handler2; // reap all dead processes
             sigemptyset(&sa.sa_mask);
             sa.sa_flags = SA_RESTART;
             if (sigaction(SIGCHLD, &sa, NULL) == -1)
@@ -333,7 +335,7 @@ void switch_main(int host_id)
 
                     n = recv(new_fd, msg, 100+4, 0);
 
-                    printf("SWITCH RECEIEVED:    %d\n", n);
+                    printf("DNS SERVER RECEIEVED:    %d\n", n);
 
                     if(n>0)
                     {
@@ -341,7 +343,7 @@ void switch_main(int host_id)
 
                         in_packet->src = (int) msg[0];
                         in_packet->dst = (int) msg[1];
-                        in_packet->type = (char) msg[2];
+                        in_packet->type = (int) msg[2];
 
                         in_packet->length = (int) msg[3];
                         for (d=0; d < in_packet->length; d++)
@@ -363,37 +365,44 @@ void switch_main(int host_id)
 
             }
 
-            if(n>0)
+            if((n>0) && ((int) in_packet->dst == host_id))
             {
-
-#ifdef DEBUG
-                printf("switch:packet RECEIEVED from port %d of %d for host %d \n", k, node_port_num, (int) in_packet->dst);
-                printf("packet type: %d", (int) in_packet->type);
-#endif
+                n=0;
                 new_job = (struct host_job *)
                         malloc(sizeof(struct host_job));
                 new_job->in_port_index = k;
                 new_job->packet = in_packet;
+                switch(in_packet->type)
+                {
+                    case (char) PKT_REG_REQ:
+                        new_job->type = JOB_REG_WAIT_FOR_REPLY;
+                        job_q_add(&job_q, new_job);
+#ifdef DEBUG
+                        printf("DNS SERVER received PKT_REG_REQ\n");
+#endif
+                        break;
 
-                if(get_host_at_port(f_table, k)==-1){
-                    set_src_at_port(f_table, (int) in_packet->src , k);
-                    f_table_length++;
-                #ifdef DEBUG
-                    printf("switch:adding to forwarding table id: %d at port %d\n", in_packet->src, k);
-                #endif
+                    case (char) PKT_FIND_REQ:
+                        new_job->type = JOB_FIND_WAIT_FOR_REPLY;
+                        job_q_add(&job_q, new_job);
+                        break;
+
+                    default:
+                        if(new_job!=NULL){
+                            free(new_job);
+                            new_job=NULL;
+                        }
+                        break;
                 }
-
-                job_q_add(&job_q, new_job);
             }
             else {
-                if(in_packet!= NULL){
+                if(in_packet!=NULL){
                     free(in_packet);
-                    in_packet=NULL;
+                    in_packet = NULL;
                 }
-
             }
-
         }
+
         /*
           * Execute one job in the job queue
           */
@@ -403,48 +412,64 @@ void switch_main(int host_id)
             /* Get a new job from the job queue */
             new_job = job_q_remove(&job_q);
 
-            // int i=0;
-            packet_dest = (int) new_job->packet->dst;
+            switch(new_job->type) {
+                case JOB_REG_WAIT_FOR_REPLY:
 #ifdef DEBUG
-            printf("switch: forwarding table\n");
-            print_ftable(f_table);
+                    printf("DNS SERVER working on JOB_REG_WAIT_FOR_REPLY\n");
 #endif
-
-            if(find_host_in_table(f_table, packet_dest)==-1)
-            {
-                //host not in table
-                //send to all ports except the received port
-
-                for(i=0; i<node_port_num; i++)
-                {
-                    if(i != new_job->in_port_index){
-#ifdef DEBUG
-                        printf("switch:sending packet on port %d of %d\n", i, node_port_num);
-                        printf("for host: %d\n", (int)new_job->packet->dst);
-#endif
-                        packet_send(node_port[i], new_job->packet);
+                    for(i=0;i<(new_job->packet->length);i++)
+                    {
+                        dns[i] = new_job->packet->payload[i];
+                        printf("\n\n%c\n\n",dns[i]);
+                        printf("loop");
                     }
-                }
-            }
-            else {
-#ifdef DEBUG
-                printf("switch: sending packet to host %d on port %d \n",  packet_dest, find_host_in_table(f_table, packet_dest));
-                printf("for host: %d\n", (int)new_job->packet->dst);
-#endif
-                packet_send(node_port[find_host_in_table(f_table,  packet_dest)], new_job->packet);
-            }
+                    i=add_naming_table(n_table, dns, (int) new_job->packet->src);
+                    print_ntable(n_table);
+                    //send packet back to host that registered name
+                    if(i!=-1) new_job->packet->payload[0]='1';
+                    else new_job->packet->payload[0]='0';
+                    new_job->packet->dst = new_job->packet->src;
+                    new_job->packet->src = 100;
+                    new_job->packet->type = (char) PKT_REG_REPLY;
+                    new_job->packet->length = 1;
+                    packet_send(node_port[0], new_job->packet);
+                    if(new_job->packet != NULL){
+                        free(new_job->packet);
+                        new_job->packet = NULL;
+                    }
+                    if(new_job != NULL){
+                        free(new_job);
+                        new_job = NULL;
+                    }
+                    break;
 
-            if(new_job->packet != NULL){
-                free(new_job->packet);
-                new_job->packet = NULL;
-            }
-            if(new_job != NULL){
-                free(new_job);
-                new_job = NULL;
-            }
+                case JOB_FIND_WAIT_FOR_REPLY:
+                    for(i=0;i<new_job->packet->length; i++)
+                    {
+                        dns[i] = new_job->packet->payload[i];
+                    }
+                    i = find_name_in_table(n_table, dns);
+                    //send packet back to host with the host id
+                    if(i!=-1) new_job->packet->payload[0]=(char) i;
+                    else new_job->packet->payload[0]='E';
+                    new_job->packet->dst = new_job->packet->src;
+                    new_job->packet->src = 100;
+                    new_job->packet->type = (char) PKT_FIND_REPLY;
+                    new_job->packet->length = 1;
+                    packet_send(node_port[0], new_job->packet);
 
+                    if(new_job->packet != NULL){
+                        free(new_job->packet);
+                        new_job->packet = NULL;
+                    }
+                    if(new_job != NULL){
+                        free(new_job);
+                        new_job = NULL;
+                    }
+                    break;
+
+            }
         }
-
 
 
 

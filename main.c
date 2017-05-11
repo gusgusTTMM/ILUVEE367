@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,21 +51,22 @@ void main()
                 /* Execute switch routine, which you have to write */
                 switch_main(p_node->id);
             }
+            else if (p_node->type == DNS) {
+                dns_main(100);
+            }
             return;
         }
     }
 
-/*
- * Parent process: Execute manager routine.
+/* 
+ * Parent process: Execute manager routine. 
  */
     man_main();
 
 
-/*
+/* 
  * We reach here if the user quits the manager.
  * The following will terminate all the children processes.
  */
     kill(0, SIGKILL); /* Kill all processes */
 }
-
-
